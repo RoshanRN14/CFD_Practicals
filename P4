@@ -1,0 +1,89 @@
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+
+using namespace std;
+
+const int N = 6; // Number of spatial points (n)
+const int M = 5; // Number of time steps (m)
+
+void tridiagonal(double a[], double b[], double c[], double d[], double x[], int n) {
+    double alpha[N], beta[N];
+
+    // Forward sweep
+    alpha[0] = b[0];
+    beta[0] = d[0] / b[0];
+    for (int i = 1; i < n; i++) {
+        alpha[i] = b[i] - a[i] * c[i - 1] / alpha[i - 1];
+        beta[i] = (d[i] - a[i] * beta[i - 1]) / alpha[i];
+    }
+
+    // Backward substitution
+    x[n - 1] = beta[n - 1];
+    for (int i = n - 2; i >= 0; i--) {
+        x[i] = beta[i] - c[i] * x[i + 1] / alpha[i];
+    }
+}
+
+int main() {
+    // Parameters for the problem
+    double L = 1.0;        // Length of the rod
+    double alpha = 0.01;    // Thermal diffusivity
+    double dx = L / (N - 1); // Spatial step size
+    double dt = 0.1 * dx * dx / alpha; // Time step size (stability condition)
+    double r = alpha * dt / (dx * dx);
+
+    // Arrays for temperature and tridiagonal coefficients
+    double u[N][M + 1] = {0.0}; // Temperature grid
+    double a[N - 2], b[N - 1], c[N - 2], d[N - 1], x[N - 1];
+
+    // Initial condition: u(x,0) = sin(pi*x)
+    for (int i = 0; i < N; i++) {
+        u[i][0] = sin(M_PI * i * dx); // Initial condition at t=0
+    }
+    u[0][0] = 0.0;   // Boundary condition at x=0
+    u[N-1][0] = 0.0; // Boundary condition at x=L
+
+    // Coefficients for the tridiagonal matrix
+    for (int i = 0; i < N - 2; i++) {
+        a[i] = -r / 2.0; // Lower diagonal
+        c[i] = -r / 2.0; // Upper diagonal
+    }
+    for (int i = 0; i < N - 1; i++) {
+        b[i] = 1 + r;    // Main diagonal
+    }
+
+    // Time-stepping loop
+    for (int j = 0; j < M; j++) {
+        // Fill the right-hand side
+        for (int i = 1; i < N - 1; i++) {
+            d[i-1] = (1 - r) * u[i][j] + r / 2.0 * (u[i+1][j] + u[i-1][j]);
+        }
+        d[0] += r / 2.0 * u[0][j];
+        d[N-2] += r / 2.0 * u[N-1][j];
+
+        // Solve the tridiagonal system
+        tridiagonal(a, b, c, d, x, N-1);
+
+        // Update the temperature grid
+        for (int i = 1; i < N - 1; i++) {
+            u[i][j + 1] = x[i - 1];
+        }
+
+        // Boundary conditions
+        u[0][j + 1] = 0.0;
+        u[N-1][j + 1] = 0.0;
+    }
+
+    // Output the results
+    cout << fixed << setprecision(4);
+    cout << "Temperature distribution at each time step:\n";
+    for (int j = 0; j <= M; j++) {
+        for (int i = 0; i < N; i++) {
+            cout << u[i][j] << "\t";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}
