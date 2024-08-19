@@ -1,4 +1,6 @@
-#include<stdio.h>
+#include<iostream>
+#include<iomanip>
+using namespace std;
 float x[10];
 float *tridiagonal(float r, float d[],int n)
 {
@@ -21,14 +23,9 @@ int main()
 {
     int i,j,n,m;
     float u[100][100],h,k,c,r;
-    printf("Enter the value of c:");
-    scanf("%f",&c);
-    printf("Enter the value of r:");
-    scanf("%f",&r);
-    printf("Enter the value of m:");
-    scanf("%d",&m);
-    printf("Enter the value of n:");
-    scanf("%d",&n);
+    r=0.5;
+    m=5;
+    n=8;
     for(j=0;j<=m;j++)
     {
         u[0][j]=0;
@@ -45,11 +42,12 @@ int main()
         for(i=1;i<n;i++)
             u[i][j+1]=y[i];
     }
-    printf("The value of all u(i,j):\n");
+    cout<<"The value of all u(i,j): \n";
+    cout<<fixed<<setprecision(4);
     for(j=m;j>=0;j--)
     {
         for(i=0;i<=n;i++)
-            printf("%2.4f\t",u[i][j]);
-        printf("\n");
+           cout<<"\t"<<u[i][j];
+       cout<<endl;
     }
 }
